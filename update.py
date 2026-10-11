@@ -5,12 +5,12 @@ import os
 import re
 
 def main():
-    # 1. 换上 GitHub 官方最新的免费大模型接口端点
- url = "https://models.github.ai/inference/chat/completions"
+    # 1. 填入 GitHub 官方正规合法的全称网址
+    url = "https://azure.com"
     token = os.environ.get('GH_TOKEN', '').strip()
     
     if not token:
-        print("❌ 错误：未能在后台找到名为 GH_TOKEN 的密钥，请检查仓库 Secrets 配置！")
+        print("❌ 错误：后台未找到名为 GH_TOKEN 的密钥，请检查仓库 Secrets 配置！")
         return
         
     headers = {
@@ -18,11 +18,9 @@ def main():
         "Authorization": f"Bearer {token}"
     }
     
-    # 动态获取当前北京时间日期
     today = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
     date_str = today.strftime("%Y年%m月%d日")
     
-    # 严格规范 AI 的输出格式
     prompt = f"""
     今天是 {date_str}。请结合全球、亚太以及财经科技的最新真实动态，生成今日新闻。
     每条新闻必须是一句事实，紧接着在括号内加上一句通俗背景解释。
@@ -36,19 +34,19 @@ def main():
     """
 
     payload = {
-        "model": "openai/gpt-4o-mini", # 根据官方最新规范，前缀加上 openai/
+        "model": "gpt-4o-mini",
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.2
     }
 
-    print("📡 正在向 GitHub 官方模型发起新闻生成请求...")
+    print("📡 正在向 AI 发起新闻生成请求...")
     response = requests.post(url, json=payload, headers=headers)
     
     if response.status_code != 200:
         print(f"❌ AI 接口请求失败，状态码: {response.status_code}, 返回内容: {response.text}")
         return
         
-    ai_data = response.json()['choices'][0]['message']['content'].strip()
+    ai_data = response.json()['choices']['message']['content'].strip()
     
     # 剥离可能存在的 markdown 外壳
     ai_data = re.sub(r'^```[a-zA-Z]*\s*', '', ai_data)
