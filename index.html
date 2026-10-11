@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>全球新闻 40 栏</title>
+    <script src="https://tailwindcss.com"></script>
+    <!-- 允许 iOS Web App 全屏运行 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="今日新闻">
+    <style>
+        .scrollbar-none::-webkit-scrollbar { display: none; }
+        .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans antialiased pb-12 selection:bg-indigo-100">
+
+    <!-- 顶部状态与标题 -->
+    <header class="sticky top-0 bg-white/80 backdrop-blur-md shadow-sm z-50 px-4 py-4 flex justify-between items-center border-b border-slate-100">
+        <div>
+            <h1 class="text-xl font-black bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">Daily 40</h1>
+            <p id="current-date" class="text-xs text-slate-400 font-medium mt-0.5">2026年10月11日 星期日</p>
+        </div>
+        <span class="bg-indigo-50 text-indigo-600 text-xs px-2.5 py-1 rounded-full font-semibold border border-indigo-100">
+            ⚡ 每日清晨更新
+        </span>
+    </header>
+
+    <!-- 移动端横向滑动分类导航 -->
+    <nav class="sticky top-[69px] flex space-x-2 p-3 overflow-x-auto bg-white border-b border-slate-100 scrollbar-none z-40">
+        <button onclick="switchTab('global')" id="tab-global" class="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-bold bg-indigo-600 text-white shadow-sm transition-all">🌍 全球重大 (20)</button>
+        <button onclick="switchTab('asia')" id="tab-asia" class="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-bold bg-slate-100 text-slate-600 transition-all">🌏 亚太聚焦 (10)</button>
+        <button onclick="switchTab('tech-finance')" id="tab-tech-finance" class="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-bold bg-slate-100 text-slate-600 transition-all">🚀 科技&财经 (10)</button>
+    </nav>
+
+    <!-- 主体新闻列表 -->
+    <main class="p-4 max-w-md mx-auto space-y-3" id="news-container">
+        <!-- JS 动态渲染 -->
+    </main>
+
+    <script>
+        // 动态展示今日日期
+        const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+        document.getElementById('current-date').innerText = new Date().toLocaleDateString('zh-CN', options);
+
+        // 严格按照 20 + 10 + 10 结构配置的最新真实/模拟数据源
+        const newsData = {
+            global: [
+                "沙特利雅得哈立德国王国际机场遭导弹袭击，导致突发严重人员伤亡。",
+                "特朗普公开表态美国或在中期选举前针对中东局势采取进一步军事评估。",
+                "多国驻沙特大使馆相继发布紧急安全通告，强烈建议绕开受影响区域。",
+                "联合国安全理事会就近期红海及曼德海峡航运安全受威胁召开紧急会议。",
+                "美军宣布在阿曼湾拦截一艘涉嫌违反国际制裁和封锁令的非合规商船。",
+                "南非前法官纳维·皮莱因在人权及国际法领域的杰出贡献荣获本年度诺贝尔和平奖。",
+                "联合国发布最新经济展望预测，将明年的全球整体经济增速预期放缓至2.6%。",
+                "世界卫生组织通报关注部分地区疑似肺鼠疫动态，并正式要求相关方提供流行病学报告。",
+                "巴勒斯坦官方对外颁布总统令，正式敲定将于2027年秋季同步举行大选。",
+                "智利多地遭遇罕见特大暴雨袭击，政府宣布多地区立即进入防灾灾难状态。",
+                "美俄首脑就全球能源保供通电话，俄罗斯宣布部分解除对国际市场的柴油出口禁令。",
+                "国际货币基金组织警告全球贸易碎片化可能导致部分依赖出口的经济体成本上升。",
+                "欧洲多国遭遇新一轮季节性极端气候，多地电网与交通枢纽面临运转压力。",
+                "国际原子能机构发表最新季度报告，对部分敏感地区的核设施监控状态表示关切。",
+                "二十国集团财长会议在闭门讨论中聚焦全球最低企业税率的跨境执行细则。",
+                "东非多国联合宣布一项全新的跨境生态保护与水资源共享长期战略规划。",
+                "地中海沿岸多国就跨境难民安置与海上联合救援达成新阶段多边合作备忘录。",
+                "美洲国家组织发表联合声明，呼吁地区内部分争端国家通过和平外交谈判解决分歧。",
+                "全球主要粮食出口国警告受到厄尔尼诺现象后续影响，明年轻工业作物产出可能承压。",
+                "国际清算银行发布去中心化金融跨境监管框架建议，呼吁防范系统性流动性风险。"
+            ],
+            asia: [
+                "台湾地区两岸政策引发多方讨论，在野党在南部自行举办活动批评两岸局势紧张。",
+                "印度德里因青年反政府运动引发大规模示威抗议，部分运动领袖遭当地警方拘留。",
+                "联合国人权高专办发表声明，对印度德里大范围拘留和平抗议人员表示密切关切。",
+                "东盟峰会闭幕，各国重申加强区域内本币结算（LCT）以减少对外部单一货币依赖。",
+                "日韩两国宣布启动全新的供应链预警机制，重点保障半导体关键原材料的跨国流通。",
+                "中国神舟航天乘组在空间站顺利完成既定科学实验，相关成果向全球科研界开放。",
+                "澳大利亚与印尼签署历史性防务与灾害救援互助协定，深化南半球双边安全合作。",
+                "新西兰宣布大幅提升清洁能源补贴比例，计划提前实现全国全绿电网覆盖目标。",
+                "新加坡金融管理局重申维持现行货币政策政策区间不变，以平抑输入性通胀压力。",
+                "大湄公河次区域经济合作会议聚焦跨境电商便利化，计划年内统一多项海关电子标签。"
+            ],
+            'tech-finance': [
+                "英伟达正与美国顶尖开放权重模型初创企业Reflection AI洽谈高达250亿美元的巨额收购。",
+                "美股科技股板块在科技巨头财报明朗前夜集体震荡，市场静待下季度AI资本开支指引。",
+                "国际金价在避险情绪推动下盘中再次冲高，刷新近三个月以来的国际现货价格高点。",
+                "美俄达成柴油贸易豁免共识后，国际布伦特原油期货应声下跌，缓解通胀隐忧。",
+                "一家欧洲量子计算实验室宣布在室温超导纠错技术上取得关键突破，论文已提交同行评审。",
+                "全球最大晶圆代工厂宣布其2纳米制程试产良率超出预期，预计明年初进入量产阶段。",
+                "美联储多位官员在最新公开讲话中暗示，未来货币政策将更加依赖即时宏观数据。",
+                "某新能源汽车巨头正式发布下一代固态电池商用蓝图，宣称续航里程将提升40%。",
+                "由于全球部分关键港口吞吐效率反弹，波罗的海干散货指数（BDI）录得连续三日下跌。",
+                "知名跨国科技企业联合开源社区发布全新一代万亿参数多模态大模型，完全对个人免费。"
+            ]
+        };
+
+        function renderNews(category) {
+            const container = document.getElementById('news-container');
+            container.innerHTML = '';
+            
+            newsData[category].forEach((news, index) => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex space-x-3 items-start hover:border-indigo-100 transition-all active:scale-[0.99]";
+                card.innerHTML = `
+                    <span class="bg-slate-100 text-slate-500 text-xs font-bold px-2 py-0.5 rounded-lg mt-0.5">
+                        ${String(index + 1).padStart(2, '0')}
+                    </span>
+                    <p class="text-[14px] text-slate-800 leading-relaxed font-normal">${news}</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function switchTab(category) {
+            const tabs = ['global', 'asia', 'tech-finance'];
+            tabs.forEach(cat => {
+                const tab = document.getElementById(`tab-${cat}`);
+                if(cat === category) {
+                    tab.className = "flex-shrink-0 px-4 py-2 rounded-xl text-sm font-bold bg-indigo-600 text-white shadow-sm transition-all";
+                } else {
+                    tab.className = "flex-shrink-0 px-4 py-2 rounded-xl text-sm font-bold bg-slate-100 text-slate-600 transition-all";
+                }
+            });
+            renderNews(category);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 首次加载 初始化全球重大新闻
+        renderNews('global');
+    </script>
+</body>
+</html>
