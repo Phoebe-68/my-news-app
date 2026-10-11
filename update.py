@@ -6,7 +6,7 @@ import re
 
 def main():
     # 1. 换上 GitHub 官方最新的免费大模型接口端点
-    url = "https://github.ai"
+ url = "https://models.github.ai/inference/chat/completions"
     token = os.environ.get('GH_TOKEN', '').strip()
     
     if not token:
