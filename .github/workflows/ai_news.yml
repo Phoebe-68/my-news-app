@@ -32,7 +32,7 @@ jobs:
         import os
         import re
 
-        # 1. 配置正确的 GitHub Models AI 服务端点
+        # 1. 换上真正无误的 GitHub 官方大模型免费接口端点
         url = "https://azure.com"
         token = os.environ.get('GH_TOKEN', '').strip()
         
@@ -48,7 +48,6 @@ jobs:
         today = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
         date_str = today.strftime("%Y年%m月%d日")
         
-        # 严格控制 AI 的返回格式，防止其吐出多余的胡言乱语
         prompt = f"""
         今天是 {date_str}。请结合全球、亚太以及财经科技的最新真实动态，生成今日新闻。
         每条新闻必须是一句事实，紧接着在括号内加上一句通俗背景解释。
@@ -76,7 +75,7 @@ jobs:
             
         ai_data = response.json()['choices']['message']['content'].strip()
         
-        # 工业级清洗：利用正则表达式强行剥离可能存在的 ```json ... ``` 外壳
+        # 工业级清洗：剥离 markdown 外壳
         ai_data = re.sub(r'^```[a-zA-Z]*\s*', '', ai_data)
         ai_data = re.sub(r'\s*```$', '', ai_data)
         ai_data = ai_data.strip()
@@ -92,10 +91,10 @@ jobs:
         with open("index.html", "r", encoding="utf-8") as f:
             html = f.read()
 
-        # 精准替换页面中的日期标题（兼容老日期）
+        # 精准替换页面中的日期标题
         html = re.sub(r'id="current-date"[^>]*>.*?<\/p>', f'id="current-date" class="text-xs text-slate-400 font-medium mt-0.5">{date_str}<\/p>', html)
         
-        # 精准使用正则定位并替换 JavaScript 里的 newsData 对象，实现全自动无痕数据注入
+        # 精准定位并替换 JavaScript 里的 newsData 对象
         new_js_block = f"""const newsData = {{
             global: {json.dumps(news_json['global'], ensure_ascii=False, indent=16)},
             asia: {json.dumps(news_json['asia'], ensure_ascii=False, indent=16)},
