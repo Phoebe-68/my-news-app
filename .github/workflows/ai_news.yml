@@ -1,0 +1,96 @@
+name: 每日AI新闻自动生成器
+
+on:
+  schedule:
+    # 每天北京时间早上 08:00 自动运行 (对应格林威治时间 00:00)
+    - cron: '0 0 * * *'
+  workflow_dispatch: # 允许你随时在 GitHub 网页上点击按钮手动强制更新
+
+jobs:
+  build-and-update:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 检查网页代码
+      uses: actions/checkout@v3
+
+    - name: 配置 Python 环境
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: 安装 AI 调用工具
+      run: pip install requests
+
+    - name: 让 AI 抓取并生成带背景的新闻
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: |
+        python - <<EOF
+        import requests
+        import json
+        import datetime
+        import os  # <-- 补上了这个核心系统工具包
+
+        # 使用 GitHub 免费提供的公用大模型服务进行实时新闻与背景概括
+        url = "https://azure.com"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {os.environ['GH_TOKEN']}"
+        }
+        
+        # 严格的 AI 提示词，包含日期锚定确保生成当天最新的内容
+        today = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
+        date_str = today.strftime("%Y年%m月%d日")
+        
+        prompt = f"""
+        今天是 {date_str}。你是一个资深的新闻简报专家。
+        请结合当前全球、亚太以及财经科技的最新真实动态，生成今日的新闻简报。
+        每条新闻必须是一句【新闻核心事实】，紧接着在括号内加上一句简明扼要的【通俗背景解释或影响分析】。
+        
+        必须严格按照以下 JSON 格式输出，不要包含任何 markdown 标记（如 ```json 等）：
+        {{
+          "global": [ "全球重大新闻1(背景解释)", "全球重大新闻2(背景解释)" ],
+          "asia": [ "亚太聚焦新闻1(背景解释)" ],
+          "tech_finance": [ "科技与财经新闻1(背景解释)" ]
+        }}
+        请务必填满：global 20条，asia 10条，tech_finance 10条。
+        """
+
+        payload = {
+            "model": "gpt-4o-mini",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.3
+        }
+
+        response = requests.post(url, json=payload, headers=headers)
+        ai_data = response.json()['choices']['message']['content'].strip()
+        
+        # 清洗可能带有的 markdown 外壳
+        if ai_data.startswith("```"):
+            lines = ai_data.split("\n")
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines[-1].startswith("```"):
+                lines = lines[:-1]
+            ai_data = "\n".join(lines).strip()
+        
+        news_json = json.loads(ai_data)
+
+        # 读取现有的 index.html 并进行数据注入
+        with open("index.html", "r", encoding="utf-8") as f:
+            html = f.read()
+
+        # 动态替换日期
+        html = html.replace('2026年10月11日 星期日', f'{date_str}')
+        
+        with open("index.html", "w", encoding="utf-8") as f:
+            f.write(html)
+        EOF
+
+    - name: 提交更新到网页
+      run: |
+        git config --global user.name "AI-News-Bot"
+        git config --global user.email "bot@github.com"
+        git add index.html
+        git commit -m "AI 自动生成今日带背景解释简报" || exit 0
+        git push
